@@ -10,6 +10,8 @@ __pycache__/
 *.db
 *.sqlite3
 
+demo.ipynb
+
 # =========================
 # Virtual Environment
 # =========================
@@ -17,7 +19,7 @@ __pycache__/
 venv/
 env/
 ENV/
-
+src/subagents/fiight.ipynb
 # =========================
 # Environment variables
 # =========================
