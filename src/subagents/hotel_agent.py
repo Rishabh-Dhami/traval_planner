@@ -430,7 +430,7 @@ def get_hotels_by_traveler_type(
             hotel
             for hotel in hotels
             if any(
-                t in hotel.get("traveler_type", [])
+                t.lower() in [x.lower() for x in hotel.get("traveler_type", [])]
                 for t in traveler_type
             )
         ]
@@ -570,7 +570,7 @@ def get_hotels_by_amenities(
         
         filtered_hotels = [
             hotel for hotel in hotels if any(
-                t in hotel.get("amenities", []) 
+                t.lower() in [x.lower() for x in hotel.get("amenities", [])] 
                 for t in amentities
             )
         ]
