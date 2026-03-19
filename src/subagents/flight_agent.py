@@ -147,17 +147,17 @@ def search_flights(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
-
+    destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination.lower())
+        flights: List[Dict[str, Any]] = get_flights(destination_clean)
 
         if not flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "flight_count": None,
                 "flights": None,
-                "error": f"No flights found for {destination}",
+                "error": f"No flights found for {destination_clean}",
                 "error_details": None,
             }
 
@@ -178,7 +178,7 @@ def search_flights(
         if not flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "flight_count": None,
                 "flights": None,
                 "error": "No flights match your criteria",
@@ -208,7 +208,7 @@ def search_flights(
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "flight_count": len(flight_results),
             "flights": flight_results,
             "error": None,
@@ -256,16 +256,16 @@ def get_cheapest_flight(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
-
+    destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination.lower())
+        flights: List[Dict[str, Any]] = get_flights(destination_clean)
 
         if not flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "cheapest_flight_details": None,
-                "error": f"No flights found for destination: {destination}",
+                "error": f"No flights found for destination: {destination_clean}",
                 "error_details": None,
             }
 
@@ -274,25 +274,12 @@ def get_cheapest_flight(
             key=lambda x: x.get("price", float("inf"))
         )
 
-        cheapest_flight_result = {
-            "airline": cheapest.get("airline"),
-            "flight_number": cheapest.get("flight_number"),
-            "departure_city": cheapest.get("departure_city"),
-            "arrival_city": cheapest.get("arrival_city"),
-            "departure_time": cheapest.get("departure_time"),
-            "arrival_time": cheapest.get("arrival_time"),
-            "duration": cheapest.get("duration"),
-            "stops": cheapest.get("stops"),
-            "layover": cheapest.get("layover"),
-            "class": cheapest.get("class"),
-            "price": cheapest.get("price"),
-            "currency": cheapest.get("currency"),
-        }
+        
 
         return {
             "status": "success",
-            "destination": destination,
-            "cheapest_flight_details": cheapest_flight_result,
+            "destination": destination_clean,
+            "cheapest_flight_details": cheapest,
             "error": None,
             "error_details": None,
         }
@@ -300,7 +287,7 @@ def get_cheapest_flight(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "cheapest_flight_details": None,
             "error": "Failed to get cheapest flight",
             "error_details": str(e),
@@ -338,17 +325,18 @@ def get_direct_flight(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
-
+    
+    destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination.lower())
+        flights: List[Dict[str, Any]] = get_flights(destination_clean)
 
         if not flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "flight_count": None,
                 "flights": None,
-                "error": f"No flights found for {destination}",
+                "error": f"No flights found for {destination_clean}",
                 "error_details": None,
             }
 
@@ -361,35 +349,20 @@ def get_direct_flight(
         if not direct_flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "flight_count": None,
                 "flights": None,
                 "error": "No direct flights found",
                 "error_details": None,
             }
 
-        direct_flight_details = []
-
-        for flight in direct_flights:
-            direct_flight_details.append({
-                "airline": flight.get("airline"),
-                "flight_number": flight.get("flight_number"),
-                "departure_city": flight.get("departure_city"),
-                "arrival_city": flight.get("arrival_city"),
-                "departure_time": flight.get("departure_time"),
-                "arrival_time": flight.get("arrival_time"),
-                "duration": flight.get("duration"),
-                "stops": flight.get("stops"),
-                "class": flight.get("class"),
-                "price": flight.get("price"),
-                "currency": flight.get("currency"),
-            })
+    
 
         return {
             "status": "success",
-            "destination": destination,
-            "flight_count": len(direct_flight_details),
-            "flights": direct_flight_details,
+            "destination": destination_clean,
+            "flight_count": len(direct_flights),
+            "flights": direct_flights,
             "error": None,
             "error_details": None,
         }
@@ -440,19 +413,20 @@ def compare_flights(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
-
+    
+    destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination.lower())
+        flights: List[Dict[str, Any]] = get_flights(destination_clean)
 
         if not flights:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "flight_count": None,
                 "flights": None,
                 "cheapest": None,
                 "fastest": None,
-                "error": f"No flights found for {destination}",
+                "error": f"No flights found for {destination_clean}",
                 "error_details": None,
             }
 
@@ -471,7 +445,7 @@ def compare_flights(
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "flight_count": len(flights),
             "flights": flights,
             "cheapest": cheapest,
