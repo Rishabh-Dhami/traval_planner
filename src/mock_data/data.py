@@ -433,18 +433,3 @@ MOCK_RESTAURANTS = {
 }
 
 
-def get_flights(destination: str) -> list:
-    """Get available flights for a destination"""
-    return MOCK_FLIGHTS.get(destination.lower(), [])
-
-def get_hotels(destination: str) -> list:
-    """Get available hotels for a destination"""
-    return MOCK_HOTELS.get(destination.lower(), [])
-
-def get_activities(destination: str) -> list:
-    """Get available activities for a destination"""
-    return MOCK_ACTIVITIES.get(destination.lower(), [])
-
-def get_restaurants(destination: str) -> list:
-    """Get restaurant recommendations for a destination"""
-    return MOCK_RESTAURANTS.get(destination.lower(), [])

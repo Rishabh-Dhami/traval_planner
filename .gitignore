@@ -19,8 +19,7 @@ demo.ipynb
 venv/
 env/
 ENV/
-src/subagents/fiight.ipynb
-src/subagents/hotel.ipynb
+src/subagents/activity.ipynb
 # =========================
 # Environment variables
 # =========================
