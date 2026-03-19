@@ -85,7 +85,7 @@ sys.path.insert(0, '../..')
 from langchain.agents import create_agent
 from langchain.tools import tool
 from src.mock_data.data import get_hotels
-from typing import  List, Dict, Any
+from typing import  List, Dict, Any, Literal
 from src.prompts import HOTEL_AGENT_PROMPT
 
 
@@ -121,25 +121,25 @@ def search_hotels(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
+    
+    destination_clean = destination.strip().lower()
 
     try:
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": len(hotels),
             "hotels": hotels,
             "error": None,
@@ -149,7 +149,7 @@ def search_hotels(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Failed to search hotels",
@@ -190,11 +190,13 @@ def get_budget_hotels(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
+    
+    destination_clean = destination.strip().lower()
 
     if budget is None or budget <= 0:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Budget must be greater than 0",
@@ -202,17 +204,15 @@ def get_budget_hotels(
         }
 
     try:
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
 
@@ -225,7 +225,7 @@ def get_budget_hotels(
         if not hotels_under_budget:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
                 "error": f"No hotels found under budget {budget}",
@@ -234,7 +234,7 @@ def get_budget_hotels(
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": len(hotels_under_budget),
             "hotels": hotels_under_budget,
             "error": None,
@@ -244,7 +244,7 @@ def get_budget_hotels(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Failed to filter hotels by budget",
@@ -297,19 +297,19 @@ def get_hotels_by_rating(
             "error": "Rating cannot be empty",
             "error_details": None,
         }
+    
+    destination_clean = destination.strip().lower()
 
     try:
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
 
@@ -322,7 +322,7 @@ def get_hotels_by_rating(
         if not hotels_under_rating:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
                 "error": f"No hotels found with rating >= {rating}",
@@ -331,7 +331,7 @@ def get_hotels_by_rating(
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": len(hotels_under_rating),
             "hotels": hotels_under_rating,
             "error": None,
@@ -341,13 +341,12 @@ def get_hotels_by_rating(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Failed to filter hotels by rating",
             "error_details": str(e),
         }
-from typing import Dict, Any, List, Literal
 
 #Filter hotels by traveler_type
 @tool
@@ -389,7 +388,7 @@ def get_hotels_by_traveler_type(
             }
     """
 
-    # ✅ validation
+    #  validation
     if not destination or not destination.strip():
         return {
             "status": "error",
@@ -409,24 +408,24 @@ def get_hotels_by_traveler_type(
             "error": "traveler_type cannot be empty",
             "error_details": None,
         }
+    
+    destination_clean = destination.strip().lower()
 
     try:
 
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
 
-        # ✅ filter by traveler type (supports multiple)
+        #filter by traveler type (supports multiple)
         filtered_hotels = [
             hotel
             for hotel in hotels
@@ -439,19 +438,19 @@ def get_hotels_by_traveler_type(
         if not filtered_hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
                 "error": (
                     f"No hotels found for traveler type "
-                    f"{traveler_type} in {destination}"
+                    f"{traveler_type} in {destination_clean}"
                 ),
                 "error_details": None,
             }
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": len(filtered_hotels),
             "hotels": filtered_hotels,
             "error": None,
@@ -461,7 +460,7 @@ def get_hotels_by_traveler_type(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Failed to filter hotels by traveler type",
@@ -552,20 +551,20 @@ def get_hotels_by_amenities(
             "error": "Amentities cannot be empty",
             "error_details": None,
         }
+    
+    destination_clean = destination.strip().lower()
 
     try:
 
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
         
@@ -579,19 +578,19 @@ def get_hotels_by_amenities(
         if not filtered_hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "hotels_count": None,
                 "hotels": None,
                 "error": (
                     f"No hotels found for amentity type "
-                    f"{amentities} in {destination}"
+                    f"{amentities} in {destination_clean}"
                 ),
                 "error_details": None,
             }
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": len(filtered_hotels),
             "hotels": filtered_hotels,
             "error": None,
@@ -601,7 +600,7 @@ def get_hotels_by_amenities(
     except Exception as e:
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "hotels_count": None,
             "hotels": None,
             "error": "Failed to filter hotels by amenities type",
@@ -637,24 +636,23 @@ def get_hotel_recommendation(
             "error": "Destination cannot be empty",
             "error_details": None,
         }
+    destination_clean = destination.strip().lower()
 
     try:
 
-        hotels: List[Dict[str, Any]] = get_hotels(
-            destination.lower().strip()
-        )
+        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
         if not hotels:
             return {
                 "status": "error",
-                "destination": destination,
+                "destination": destination_clean,
                 "recommendation": None,
                 "runner_up": None,
-                "error": f"No hotels found for {destination}",
+                "error": f"No hotels found for {destination_clean}",
                 "error_details": None,
             }
 
-        # ✅ filter by traveler type
+        # filter by traveler type
         traveler_type_lower = traveler_type.lower()
 
         matching_hotels = [
@@ -666,7 +664,7 @@ def get_hotel_recommendation(
             matching_hotels = hotels
 
 
-        # ✅ sorting logic
+        # sorting logic
         if priority == "price":
 
             matching_hotels.sort(
@@ -704,7 +702,7 @@ def get_hotel_recommendation(
 
         return {
             "status": "success",
-            "destination": destination,
+            "destination": destination_clean,
 
             "recommendation": {
                 "id": top_pick.get("id"),
@@ -738,7 +736,7 @@ def get_hotel_recommendation(
 
         return {
             "status": "error",
-            "destination": destination,
+            "destination": destination_clean,
             "recommendation": None,
             "runner_up": None,
             "error": "Failed to get recommendation",
