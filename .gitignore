@@ -20,6 +20,7 @@ venv/
 env/
 ENV/
 src/subagents/fiight.ipynb
+src/subagents/hotel.ipynb
 # =========================
 # Environment variables
 # =========================
