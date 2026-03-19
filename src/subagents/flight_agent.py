@@ -107,7 +107,7 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from langchain.tools import tool
-from src.mock_data.data import get_flights
+from src.utils import get_flights
 from typing import Optional, List, Dict, Any
 from src.prompts import FLIGHT_AGENT_PROMPT
 

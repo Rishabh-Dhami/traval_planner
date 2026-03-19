@@ -84,7 +84,7 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from langchain.tools import tool
-from src.mock_data.data import get_hotels
+from src.utils import get_hotels
 from typing import  List, Dict, Any, Literal
 from src.prompts import HOTEL_AGENT_PROMPT
 
