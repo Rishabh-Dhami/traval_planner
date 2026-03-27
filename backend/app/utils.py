@@ -1,5 +1,5 @@
 import re
-from src.mock_data.data import MOCK_ACTIVITIES, MOCK_FLIGHTS, MOCK_RESTAURANTS, MOCK_HOTELS
+from app.mock_data.data import MOCK_ACTIVITIES, MOCK_FLIGHTS, MOCK_RESTAURANTS, MOCK_HOTELS
 
 def parse_duration_to_hours(text: str) -> float:
     """

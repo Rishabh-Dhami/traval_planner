@@ -84,9 +84,9 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from langchain.tools import tool
-from src.utils import get_hotels
+from app.utils import get_hotels
 from typing import  List, Dict, Any, Literal
-from src.prompts import HOTEL_AGENT_PROMPT
+from app.prompts import HOTEL_AGENT_PROMPT
 
 
 # Search hotels for a given destination.

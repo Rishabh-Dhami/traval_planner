@@ -1,95 +1,115 @@
-
-# =========================
+# ======================
 # Python
-# =========================
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pkl
-*.db
-*.sqlite3
-
-demo.ipynb
-
-# =========================
-# Virtual Environment
-# =========================
+# ======================
 .venv/
 venv/
 env/
 ENV/
-src/subagents/activity.ipynb
-# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ======================
 # Environment variables
-# =========================
+# ======================
 .env
-.env.*
-*.env
+.env.local
+.env.*.local
+.env/
 
-# =========================
-# Jupyter Notebook
-# =========================
-.ipynb_checkpoints/
+# ======================
+# Node.js
+# ======================
+node_modules/
+npm-debug.log
+yarn-error.log
 
-# =========================
-# VS Code
-# =========================
-.vscode/
+# ======================
+# LangChain & MCP
+# ======================
+.langchain/
+*.sqlite
+*.db
+.cache/
+cache/
 
-# =========================
-# PyCharm
-# =========================
-.idea/
-
-# =========================
+# ======================
 # Logs
-# =========================
+# ======================
 *.log
+logs/
+*.log.*
 
-# =========================
+# ======================
 # OS files
-# =========================
+# ======================
 .DS_Store
 Thumbs.db
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
-# =========================
-# LangChain / AI cache
-# =========================
-.cache/
-langchain.db
-chroma/
-chroma_db/
-vectorstore/
-faiss_index/
-
-# =========================
-# Build files
-# =========================
+# ======================
+# Build / cache / artifacts
+# ======================
 dist/
 build/
-*.egg-info/
-
-# =========================
-# Temporary files
-# =========================
-tmp/
-temp/
+.cache/
 *.tmp
-
-# =========================
-# Testing
-# =========================
+*.temp
+.pytest_cache/
 .coverage
 htmlcov/
+.tox/
 
-# =========================
-# Node (if frontend exists)
-# =========================
-node_modules/
+# ======================
+# IDE / Editor
+# ======================
+.vscode/
+.vscode-server/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.vim/
 
-# =========================
-# Secrets / API keys
-# =========================
-secrets.json
-credentials.json
+# ======================
+# Temporary files
+# ======================
+*.bak
+*.tmp
+.DS_Store*
+*.class
+
+# ======================
+# Virtual environment
+# ======================
+.venv
+venv
+env
+.env

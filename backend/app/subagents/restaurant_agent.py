@@ -52,9 +52,9 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from langchain.tools import tool
-from src.utils import get_restaurants
+from app.utils import get_restaurants
 from typing import  List, Dict, Any, Literal, Union, Optional
-from src.prompts import RESTAURANT_AGENT_PROMPT
+from app.prompts import RESTAURANT_AGENT_PROMPT
 
 
 @tool

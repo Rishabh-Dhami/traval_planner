@@ -112,9 +112,9 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from langchain.tools import tool
-from src.utils import get_activities, parse_duration_to_hours
+from app.utils import get_activities, parse_duration_to_hours
 from typing import  List, Dict, Any, Literal, Union
-from src.prompts import ACTIVITY_AGENT_SYSTEM_PROMPT
+from app.prompts import ACTIVITY_AGENT_SYSTEM_PROMPT
 
 @tool
 def search_activities(destination: str) -> Dict[str, Any]:
