@@ -1,7 +1,7 @@
 from typing import Dict, List, Any
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["flight"])
+@mcp.tool(tags={"flight"})
 def get_cheapest_flight(
     destination: str
 ) -> Dict[str, Any]:

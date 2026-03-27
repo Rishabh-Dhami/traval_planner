@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["activity"])
+@mcp.tool(tags={"activity"})
 def search_activities(destination: str) -> Dict[str, Any]:
     """
     Search available activities for a destination.

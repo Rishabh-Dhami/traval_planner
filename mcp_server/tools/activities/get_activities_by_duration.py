@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 from backend.app.utils import parse_duration_to_hours
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["activity"])
+@mcp.tool(tags={"activity"})
 def get_activities_by_duration(
     destination: str,
     max_hours: float

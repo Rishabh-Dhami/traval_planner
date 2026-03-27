@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Literal
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["activity"])
+@mcp.tool(tags={"activity"})
 def get_activity_recommendation(
     destination: str,
     priority: Literal["price", "rating", "balanced"] = "balanced"

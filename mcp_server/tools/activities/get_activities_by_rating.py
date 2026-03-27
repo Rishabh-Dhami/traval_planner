@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["activity"])
+@mcp.tool(tags={"activity"})
 def get_activities_by_rating(
     destination: str,
     rating: float

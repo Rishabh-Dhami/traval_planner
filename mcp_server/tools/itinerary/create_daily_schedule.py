@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Literal
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["itinerary"])
+@mcp.tool(tags={"itinerary"})
 def create_daily_schedule(
     destination: str | None,
     days: int | None,

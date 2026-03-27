@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["hotel"])
+@mcp.tool(tags={"hotel"})
 def get_hotels_by_rating(
     destination: str,
     rating: int

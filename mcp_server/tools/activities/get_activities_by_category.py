@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["activity"])
+@mcp.tool(tags={"activity"})
 def get_activities_by_category(
     destination: str,
     category: Union[str, List[str]]

@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["restaurant"])
+@mcp.tool(tags={"restaurant"})
 def get_budget_restaurants(
     destination: str,
     budget: int

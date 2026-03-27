@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Literal, Union
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["restaurant"])
+@mcp.tool(tags={"restaurant"})
 def get_restaurants_by_tags(
     destination: str,
     tags: Union[

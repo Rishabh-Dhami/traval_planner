@@ -1,7 +1,7 @@
 from typing import Dict, Any, Literal
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["restaurant"])
+@mcp.tool(tags={"restaurant"})
 def get_restaurant_recommendation(
     destination: str,
     priority: Literal["price", "rating", "balanced"] = "balanced",

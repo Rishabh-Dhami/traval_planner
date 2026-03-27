@@ -1,7 +1,7 @@
 from typing import Dict, List, Any
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["flight"])
+@mcp.tool(tags={"flight"})
 def compare_flights(
     destination: str,
 ) -> Dict[str, Any]:

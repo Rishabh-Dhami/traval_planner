@@ -1,7 +1,7 @@
 from typing import Dict, List, Any, Optional
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["flight"])
+@mcp.tool(tags={"flight"})
 def search_flights(
     destination: str,
     budget_max: Optional[int] = None,

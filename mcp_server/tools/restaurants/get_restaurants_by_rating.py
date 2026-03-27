@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from mcp_server.mcp_instance import mcp
 
-@mcp.tool(tags=["restaurant"])
+@mcp.tool(tags={"restaurant"})
 def get_restaurants_by_rating(
     destination: str,
     rating: float
