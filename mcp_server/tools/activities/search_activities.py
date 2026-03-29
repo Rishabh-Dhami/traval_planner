@@ -1,5 +1,10 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.activities_schema import Activity, ActivityResponse
+from mcp_server.utils import get_activities
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"activity"})
 def search_activities(destination: str) -> Dict[str, Any]:
@@ -23,56 +28,43 @@ def search_activities(destination: str) -> Dict[str, Any]:
 
     
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
-    if not destination_clean:
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Destination cannot be empty",
-            "error_details": None,
-        }
-
     try:
-        activities: List[Dict[str, Any]] = get_activities(destination_clean)
+        raw_activities: List[Dict[str, Any]] = get_activities(destination_clean)
 
-        if not activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activities_count": 0,
-                "activities": [],
-                "error": f"No activities found for '{destination_clean}'",
-                "error_details": None,
-            }
-
+        activities: List[Activity] = []
+        for a in raw_activities:
+            try:
+                activities.append(Activity.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid activity skipped: {a} | Error: {e}")
         
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "activities_count": len(activities),
-            "activities": activities,
-            "error": None,
-            "error_details": None,
-        }
+        if not activities:
+            return ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No activities found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
+
+        return ActivityResponse(
+            status="success",
+            destination=destination_clean,
+            activities=activities,
+            activity_count=len(activities),
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "activities_count": None,
-            "activities": None,
-            "error": "Internal error while searching activities",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to search activities")
+
+        return ActivityResponse(
+            status="error",
+            error=f"No activities search found for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )        

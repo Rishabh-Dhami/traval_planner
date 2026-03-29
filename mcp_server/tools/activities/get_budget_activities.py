@@ -1,5 +1,10 @@
 from typing import Dict, Any, List
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.activities_schema import Activity, ActivityResponse
+from mcp_server.utils import get_activities
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"activity"})
 def get_budget_activities(
@@ -30,42 +35,38 @@ def get_budget_activities(
 
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     if budget is None or budget < 0:
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Budget must be >= 0",
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="Budget must be >= 0"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
     try:
+        raw_activities: List[Dict[str, Any]] = get_activities(destination_clean)
 
-        activities: List[Dict[str, Any]] = get_activities(destination_clean)
-
-        if not activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activities_count": None,
-                "activities": None,
-                "error": f"No activities found for {destination_clean}",
-                "error_details": None,
-            }
-
+        activities: List[Activity] = []
+        for a in raw_activities:
+            try:
+                activities.append(Activity.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid activity skipped: {a} | Error: {e}")
         
+        if not activities:
+            return ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No activities found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
+
 
         filtered_activities = [
             activity
@@ -75,32 +76,24 @@ def get_budget_activities(
         ]
 
         if not filtered_activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activities_count": None,
-                "activities": None,
-                "error": f"No activities under budget {budget}",
-                "error_details": None,
-            }
+            return ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No activities under budget {budget}"
+            )        
 
-        
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "activities_count": len(filtered_activities),
-            "activities": filtered_activities,
-            "error": None,
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="success",
+            destination=destination_clean,
+            activities=filtered_activities,
+            activity_count=len(filtered_activities),
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "activities_count": None,
-            "activities": None,
-            "error": "Failed to filter activities by budget",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to filer activities by budget")
+
+        return ActivityResponse(
+            status="error",
+            error=f"No activities found by budget for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )   

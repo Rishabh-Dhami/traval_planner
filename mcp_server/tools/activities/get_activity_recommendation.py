@@ -1,5 +1,10 @@
 from typing import Dict, Any, List, Literal
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.activities_schema import Activity, ActivityResponse
+from mcp_server.utils import get_activities
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"activity"})
 def get_activity_recommendation(
@@ -20,35 +25,44 @@ def get_activity_recommendation(
             balanced → good rating + low price
 
     Returns:
-        Dict[str, Any]
+        Dict[str, Any]:
+        {
+            "status": "success" | "error",
+            "destination": str,
+            "priority": Literal["price", "rating", "balanced"],
+            "recommended": Dict[str, Any] | None,
+            "error": str | None,
+            "error_details": str | None
+        }       
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "activity": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
     try:
-        activities: List[Dict[str, Any]] = get_activities(destination_clean)
+        raw_activities: List[Dict[str, Any]] = get_activities(destination_clean)
+
+        activities: List[Activity] = []
+        for a in raw_activities:
+            try:
+                activities.append(Activity.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid activity skipped: {a} | Error: {e}")
+        
         if not activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activity": None,
-                "error": f"No activities found for {destination_clean}",
-                "error_details": None,
-            }
+            return ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No activities found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
 
         
-
-        
-
         # ---------- choose based on priority ----------
 
         if priority == "price":
@@ -73,22 +87,18 @@ def get_activity_recommendation(
                 key=lambda x: x["rating"] / (x["price"] + 1)
             )
 
-     
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "priority": priority,
-            "activity": best,
-            "error": None,
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="success",
+            destination=destination_clean,
+            priority=priority,
+            recommended=best
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "activity": None,
-            "error": "Failed to get recommendation",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to recommended activities")
+
+        return ActivityResponse(
+            status="error",
+            error=f"No activities recommended for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )      

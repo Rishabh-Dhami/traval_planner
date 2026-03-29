@@ -1,5 +1,10 @@
 from typing import Dict, Any, List, Union
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.activities_schema import Activity, ActivityResponse
+from mcp_server.utils import get_activities
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"activity"})
 def get_activities_by_category(
@@ -34,43 +39,40 @@ def get_activities_by_category(
         }
     """
 
-    
-
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+         return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     if not category:
-        return {
-            "status": "error",
-            "destination": destination,
-            "activities_count": None,
-            "activities": None,
-            "error": "Category is required",
-            "error_details": None,
-        }
+         return ActivityResponse(
+            status="error",
+            destination=destination,
+            error="category is required"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
     try:
 
-        activities: List[Dict[str, Any]] = get_activities(destination_clean)
+        raw_activities: List[Dict[str, Any]] = get_activities(destination_clean)
 
+        activities: List[Activity] = []
+        for a in raw_activities:
+            try:
+                activities.append(Activity.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid activity skipped: {a} | Error: {e}")
+        
         if not activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activities_count": None,
-                "activities": None,
-                "error": f"No activities found for {destination_clean}",
-                "error_details": None,
-            }
+            return ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No activities found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
+
 
         
         if isinstance(category, str):
@@ -93,33 +95,24 @@ def get_activities_by_category(
         ]
 
         if not filtered_activities:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "activities_count": None,
-                "activities": None,
-                "error": f"No activities found for category {category}",
-                "error_details": None,
-            }
+            return  ActivityResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No acivity found by category: {category_clean}"
+            ).model_dump(by_alias=True)
 
-        
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "activities_count": len(filtered_activities),
-            "activities": filtered_activities,
-            "error": None,
-            "error_details": None,
-        }
+        return ActivityResponse(
+            status="success",
+            destination=destination_clean,
+            activities=filtered_activities,
+            activity_count=len(filtered_activities)
+        ).model_dump(by_alias=True)
 
     except Exception as e:
+        logger.warning(f"Failed to fetch activities by category")
 
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "activities_count": None,
-            "activities": None,
-            "error": "Failed to fetch activities",
-            "error_details": str(e),
-        }
+        return ActivityResponse(
+            status="error",
+            error=f"No activities found by category for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )   
