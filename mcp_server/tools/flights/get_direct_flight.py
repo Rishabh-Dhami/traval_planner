@@ -1,5 +1,10 @@
 from typing import Dict, List, Any
 from mcp_server.mcp_instance import mcp
+from mcp_server.utils import get_flights
+from schemas.flights_schema import Flight, FlightResponse
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"flight"})
 def get_direct_flight(
@@ -24,28 +29,29 @@ def get_direct_flight(
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "flight_count": None,
-            "flights": None,
-            "error": "Destination cannot be empty",
-            "error_details": None,
-        }
+        return FlightResponse(
+            status="success",
+            destination=destination,
+            error="Destination cannot be empty",
+        ).model_dump(by_alias=True)
     
     destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination_clean)
+        raw_flights: List[Dict[str, Any]] = get_flights(destination_clean)
+
+        flights: List[Flight] = []
+        for f in raw_flights:
+            try:
+                flights.append(Flight.model_validate(f))
+            except Exception as e:
+                logger.warning(f"Invalid flight skipped: {f} | Error: {e}")
 
         if not flights:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "flight_count": None,
-                "flights": None,
-                "error": f"No flights found for {destination_clean}",
-                "error_details": None,
-            }
+            return FlightResponse(
+                status="error",
+                destination=destination_clean,
+                error= f"No flight found for this destination: {destination_clean}"
+            )
 
         # filter direct flights safely
         direct_flights = [
@@ -54,32 +60,24 @@ def get_direct_flight(
         ]
 
         if not direct_flights:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "flight_count": None,
-                "flights": None,
-                "error": "No direct flights found",
-                "error_details": None,
-            }
+            return FlightResponse(
+                status="error",
+                destination=destination_clean,
+                error="No direct flight found"
+            )
 
-    
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "flight_count": len(direct_flights),
-            "flights": direct_flights,
-            "error": None,
-            "error_details": None,
-        }
+        return FlightResponse(
+            status="success",
+            destination=destination_clean,
+            flight_count=len(direct_flights),
+            flights=direct_flights,
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination,
-            "flight_count": None,
-            "flights": None,
-            "error": "Failed to get direct flights",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to fecth direct flights")
+        return FlightResponse(
+            status="error",
+            destination=destination_clean,
+            error=f"Failed to fetch direct flights for this destination: {destination_clean}",
+            error_details=str(e)
+        )

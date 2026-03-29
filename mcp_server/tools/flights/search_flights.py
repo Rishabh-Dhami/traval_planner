@@ -1,5 +1,10 @@
 from typing import Dict, List, Any, Optional
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.flights_schema import Flight, FlightResponse
+from mcp_server.utils import get_flights
+import logging
+
+logger = logging.warning(__name__)
 
 @mcp.tool(tags={"flight"})
 def search_flights(
@@ -28,27 +33,31 @@ def search_flights(
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "flight_count": None,
-            "flights": None,
-            "error": "Destination cannot be empty",
-            "error_details": None,
-        }
+        return FlightResponse(
+            status="error",
+            destination=destination,
+            error="Destination cannot be empty",
+        ).model_dump(by_alias=True)
+
     destination_clean = destination.strip().lower()
     try:
-        flights: List[Dict[str, Any]] = get_flights(destination_clean)
+        raw_flights: List[Dict[str, Any]] = get_flights(destination_clean)
+
+        flights: List[Flight] = []
+        
+        for f in raw_flights:
+            try:
+                flights.append(Flight.model_validate(f))
+            except Exception as e:
+                logger.warning(f"Invalid flight skipped: {f} | Error: {e}")
+                 
 
         if not flights:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "flight_count": None,
-                "flights": None,
-                "error": f"No flights found for {destination_clean}",
-                "error_details": None,
-            }
+            return FlightResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No flight found for this destination: {destination_clean}"
+            ).model_dump(by_alias=True)
 
         # filter by budget
         if budget_max is not None:
@@ -65,53 +74,25 @@ def search_flights(
             flights = [f for f in flights if f.get("stops") == 1]
 
         if not flights:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "flight_count": None,
-                "flights": None,
-                "error": "No flights match your criteria",
-                "error_details": None,
-            }
+            return FlightResponse(
+                status="error",
+                destination=destination_clean,
+                error="No flights match your criteria"
+            ).model_dump(by_alias=True)
 
-        flight_results = []
-
-        for flight in flights:
-
-            layover = flight.get("layover") or "Direct"
-
-            flight_results.append({
-                "airline": flight.get("airline"),
-                "flight_number": flight.get("flight_number"),
-                "departure_city": flight.get("departure_city"),
-                "arrival_city": flight.get("arrival_city"),
-                "departure_time": flight.get("departure_time"),
-                "arrival_time": flight.get("arrival_time"),
-                "duration": flight.get("duration"),
-                "stops": flight.get("stops"),
-                "layover": layover,
-                "class": flight.get("class"),
-                "price": flight.get("price"),
-                "currency": flight.get("currency"),
-            })
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "flight_count": len(flight_results),
-            "flights": flight_results,
-            "error": None,
-            "error_details": None,
-        }
+        return FlightResponse(
+            status="success",
+            destination=destination_clean,
+            flight_count=len(flights),
+            flights=flights
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination,
-            "flight_count": None,
-            "flights": None,
-            "error": "Failed to search flights",
-            "error_details": str(e),
-        }
+        logger.warning("Failed to search flights")
+        return FlightResponse(
+            status="error",
+            error=f"Failed to search flight for this destinaton: {destination_clean}",
+            error_details=str(e)
+        )
 
 
