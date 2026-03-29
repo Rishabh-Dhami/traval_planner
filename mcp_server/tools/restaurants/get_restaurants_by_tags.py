@@ -1,5 +1,11 @@
 from typing import Dict, Any, List, Literal, Union
 from mcp_server.mcp_instance import mcp
+import logging
+
+from mcp_server.schemas.restaurants_schema import Restaurant, RestaurantResponse
+from mcp_server.utils import get_restaurants
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"restaurant"})
 def get_restaurants_by_tags(
@@ -52,39 +58,37 @@ def get_restaurants_by_tags(
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "restaurants_count": None,
-            "restaurants": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     if not tags:
-        return {
-            "status": "error",
-            "destination": destination,
-            "restaurants_count": None,
-            "restaurants": None,
-            "error": "Tags are required",
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="error",
+            destination=destination,
+            error="Tags are required"
+        ).model_dump(by_alias=True)   
 
     destination_clean = destination.strip().lower()
 
     try:
-        restaurants = get_restaurants(destination_clean)
+        raw_restaurants: List[Dict[str, Any]] = get_restaurants(destination_clean)
 
+        restaurants: List[Restaurant] = []
+        for a in raw_restaurants:
+            try:
+                restaurants.append(Restaurant.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid restaurant skipped: {a} | Error: {e}")
+        
         if not restaurants:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "restaurants_count": None,
-                "restaurants": None,
-                "error": f"No restaurants found for destination: {destination_clean}",
-                "error_details": None,
-            }
+            return RestaurantResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No restaurants found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
 
         # normalize tags → always list
         if isinstance(tags, str):
@@ -102,30 +106,23 @@ def get_restaurants_by_tags(
         ]
 
         if not filtered_restaurants:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "restaurants_count": None,
-                "restaurants": None,
-                "error": f"No restaurants found for tags: {tags_list}",
-                "error_details": None,
-            }
+            return RestaurantResponse(
+                status="error",
+                destination=destination_clean,
+                error="No restaurants match by tags"
+            ).model_dump(by_alias=True)
 
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "restaurants_count": len(filtered_restaurants),
-            "restaurants": filtered_restaurants,
-            "error": None,
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="success",
+            destination=destination_clean,
+            restaurants=filtered_restaurants,
+            restaurant_count=len(filtered_restaurants)
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "restaurants_count": None,
-            "restaurants": None,
-            "error": "Failed to filter restaurants by tags",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to search restaurant by tags")
+        return RestaurantResponse(
+            status="error",
+            destination=destination_clean,
+            error=f"No restaurants found by tags for '{destination_clean}'"
+        ).model_dump(by_alias=True)

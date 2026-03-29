@@ -28,7 +28,6 @@ class HotelResponse(BaseModel):
     hotel_count: Optional[int] = None
     hotels: Optional[List[Hotel]] = None
     cheapest: Optional[Hotel] = None
-    best_rated: Optional[Hotel] = None
     recommended: Optional[Hotel] = None
     error: Optional[str] = None
     error_details: Optional[str] = None    

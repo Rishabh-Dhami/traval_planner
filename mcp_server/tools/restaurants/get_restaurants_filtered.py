@@ -1,5 +1,11 @@
 from typing import Dict, Any, List, Optional
 from mcp_server.mcp_instance import mcp
+import logging
+
+from mcp_server.schemas.restaurants_schema import Restaurant, RestaurantResponse
+from mcp_server.utils import get_restaurants
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"restaurant"})
 def get_restaurants_filtered(
@@ -33,62 +39,70 @@ def get_restaurants_filtered(
             best_for tags
 
     Returns:
-        Dict[str, Any]
+        Dict[str, Any]:
+        {
+            "status": "success" | "error",
+            "destination": str,
+            "restaurants_count": int | None,
+            "restaurants": List[Dict[str, Any]] | None,
+            "error": str | None,
+            "error_details": str | None
+        }
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "restaurants_count": None,
-            "restaurants": None,
-            "error": "Destination required",
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
     try:
+        raw_restaurants: List[Dict[str, Any]] = get_restaurants(destination_clean)
 
-        restaurants = get_restaurants(destination_clean)
-
+        restaurants: List[Restaurant] = []
+        for a in raw_restaurants:
+            try:
+                restaurants.append(Restaurant.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid restaurant skipped: {a} | Error: {e}")
+        
         if not restaurants:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "restaurants_count": None,
-                "restaurants": None,
-                "error": "No restaurants found",
-                "error_details": None,
-            }
+            return RestaurantResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No restaurants found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
 
-        filtered = restaurants
+        filtered_restaurants = restaurants
 
         # cuisine
         if cuisine:
-            filtered = [
-                r for r in filtered
+            filtered_restaurants = [
+                r for r in filtered_restaurants
                 if cuisine.lower() in r.get("cuisine", "").lower()
             ]
 
         # price
         if price_range:
-            filtered = [
-                r for r in filtered
+            filtered_restaurants = [
+                r for r in filtered_restaurants
                 if r.get("price_range") == price_range
             ]
 
         # rating
         if min_rating is not None:
-            filtered = [
-                r for r in filtered
+            filtered_restaurants = [
+                r for r in filtered_restaurants
                 if r.get("rating", 0) >= min_rating
             ]
 
         # neighborhood
         if neighborhood:
-            filtered = [
-                r for r in filtered
+            filtered_restaurants = [
+                r for r in filtered_restaurants
                 if neighborhood.lower()
                 in r.get("neighborhood", "").lower()
             ]
@@ -97,39 +111,32 @@ def get_restaurants_filtered(
         if tags:
             tags_lower = [t.lower() for t in tags]
 
-            filtered = [
-                r for r in filtered
+            filtered_restaurants = [
+                r for r in filtered_restaurants
                 if any(
                     t in [x.lower() for x in r.get("best_for", [])]
                     for t in tags_lower
                 )
             ]
 
-        if not filtered:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "restaurants_count": None,
-                "restaurants": None,
-                "error": "No restaurants match filters",
-                "error_details": None,
-            }
+        if not filtered_restaurants:
+            return RestaurantResponse(
+                status="error",
+                destination=destination_clean,
+                error="No restaurants match filter"
+            ).model_dump(by_alias=True)
 
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "restaurants_count": len(filtered),
-            "restaurants": filtered,
-            "error": None,
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="success",
+            destination=destination_clean,
+            restaurants=filtered_restaurants,
+            restaurant_count=len(filtered_restaurants)
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "restaurants_count": None,
-            "restaurants": None,
-            "error": "Filtering failed",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to search restaurant by filtering critirea")
+        return RestaurantResponse(
+            status="error",
+            destination=destination_clean,
+            error=f"No restaurants found for '{destination_clean}'"
+        ).model_dump(by_alias=True)

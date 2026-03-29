@@ -1,5 +1,10 @@
-from typing import Dict, Any, Literal
+from typing import Dict, Any, Literal, List
 from mcp_server.mcp_instance import mcp
+import logging
+
+from mcp_server.schemas.restaurants_schema import Restaurant, RestaurantResponse
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"restaurant"})
 def get_restaurant_recommendation(
@@ -24,34 +29,37 @@ def get_restaurant_recommendation(
         {
             "status": "success" | "error",
             "destination": str,
-            "restaurant": Dict | None,
+            "recommended": Dict | None,
             "error": str | None,
             "error_details": str | None
         }
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": destination,
-            "restaurant": None,
-            "error": "Destination is required",
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
     destination_clean = destination.strip().lower()
 
     try:
-        restaurants = get_restaurants(destination_clean)
+        raw_restaurants: List[Dict[str, Any]] = get_restaurants(destination_clean)
 
+        restaurants: List[Restaurant] = []
+        for a in raw_restaurants:
+            try:
+                restaurants.append(Restaurant.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid restaurant skipped: {a} | Error: {e}")
+        
         if not restaurants:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "restaurant": None,
-                "error": f"No restaurants found for {destination_clean}",
-                "error_details": None,
-            }
+            return RestaurantResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No restaurants found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
 
     
 
@@ -82,19 +90,17 @@ def get_restaurant_recommendation(
             )
         
 
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "restaurant": best,
-            "error": None,
-            "error_details": None,
-        }
+        return RestaurantResponse(
+            status="success",
+            destination=destination_clean,
+            recommended=best
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "restaurant": None,
-            "error": "Failed to get restaurant recommendation",
-            "error_details": str(e),
-        } 
+        logger.warning(f"Failed to recommended restaurants")
+
+        return RestaurantResponse(
+            status="error",
+            error=f"No restaurants recommended for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )     
