@@ -1,5 +1,10 @@
 from typing import Dict, Any, List, Literal
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.hotels_schema import Hotel, HotelResponse
+from mcp_server.utils import get_hotels
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"hotel"})
 def get_hotels_by_amenities(
@@ -65,40 +70,37 @@ def get_hotels_by_amenities(
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": "",
-            "hotels_count": None,
-            "hotels": None,
-            "error": "Destination cannot be empty",
-            "error_details": None,
-        }
+        return HotelResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
 
-    if not amentities:
-        return {
-            "status": "error",
-            "destination": destination,
-            "hotels_count": None,
-            "hotels": None,
-            "error": "Amentities cannot be empty",
-            "error_details": None,
-        }
-    
     destination_clean = destination.strip().lower()
 
+    if not amentities:
+        return HotelResponse(
+            status="error",
+            destination=destination,
+            error="Amentities are required"
+        ).model_dump(by_alias=True)
+
     try:
+        raw_hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
-        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
-
+        hotels: List[Hotel] = []
+        for a in raw_hotels:
+            try:
+                hotels.append(Hotel.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid hotel skipped: {a} | Error: {e}")
+        
         if not hotels:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "hotels_count": None,
-                "hotels": None,
-                "error": f"No hotels found for {destination_clean}",
-                "error_details": None,
-            }
+            return HotelResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No hotels found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
         
         filtered_hotels = [
             hotel for hotel in hotels if any(
@@ -108,33 +110,23 @@ def get_hotels_by_amenities(
         ]
 
         if not filtered_hotels:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "hotels_count": None,
-                "hotels": None,
-                "error": (
-                    f"No hotels found for amentity type "
-                    f"{amentities} in {destination_clean}"
-                ),
-                "error_details": None,
-            }
+            return HotelResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No hotels found by amentities' {amentities}'"
+            ).model_dump(by_alias=True)
 
-        return {
-            "status": "success",
-            "destination": destination_clean,
-            "hotels_count": len(filtered_hotels),
-            "hotels": filtered_hotels,
-            "error": None,
-            "error_details": None,
-        }
+        return HotelResponse(
+            status="success",
+            destination=destination_clean,
+            hotels=filtered_hotels,
+            hotel_count=len(filtered_hotels)
+        ).model_dump(by_alias=True)
 
     except Exception as e:
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "hotels_count": None,
-            "hotels": None,
-            "error": "Failed to filter hotels by amenities type",
-            "error_details": str(e),
-        }
+        logger.warning(f"Failed to fetch hotel by amentities")
+        return HotelResponse(
+            status="error",
+            destination=destination_clean,
+            error=f"No hotels found by amentities:{amentities} for '{destination_clean}'"
+        ).model_dump(by_alias=True)

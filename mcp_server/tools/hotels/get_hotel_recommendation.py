@@ -1,10 +1,14 @@
 from typing import Dict, Any, List, Literal
 from mcp_server.mcp_instance import mcp
+from mcp_server.schemas.hotels_schema import Hotel, HotelResponse
+from mcp_server.utils import get_hotels
+import logging
+
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"hotel"})
 def get_hotel_recommendation(
     destination: str,
-    traveler_type: str,
     priority: Literal["price", "rating", "balanced"] = "balanced"
 ) -> Dict[str, Any]:
     """
@@ -16,122 +20,78 @@ def get_hotel_recommendation(
         priority: "price" | "rating" | "balanced"
 
     Returns:
-        Dict[str, Any]
+        Dict[str, Any]:
+            {
+                "status": "success" | "error",
+                "destination": str,
+                "recommended": List[dict] | None,
+                "error": str | None,
+                "error_details": str | None
+            }
     """
 
     if not destination or not destination.strip():
-        return {
-            "status": "error",
-            "destination": "",
-            "recommendation": None,
-            "runner_up": None,
-            "error": "Destination cannot be empty",
-            "error_details": None,
-        }
+        return HotelResponse(
+            status="error",
+            destination=destination,
+            error="Destination is required"
+        ).model_dump(by_alias=True)
+
     destination_clean = destination.strip().lower()
 
     try:
+        raw_hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
 
-        hotels: List[Dict[str, Any]] = get_hotels(destination_clean)
-
+        hotels: List[Hotel] = []
+        for a in raw_hotels:
+            try:
+                hotels.append(Hotel.model_validate(a))
+            except Exception as e:
+                logger.warning(f"Invalid Hotel skipped: {a} | Error: {e}")
+        
         if not hotels:
-            return {
-                "status": "error",
-                "destination": destination_clean,
-                "recommendation": None,
-                "runner_up": None,
-                "error": f"No hotels found for {destination_clean}",
-                "error_details": None,
-            }
+            return HotelResponse(
+                status="error",
+                destination=destination_clean,
+                error=f"No hotels found for '{destination_clean}'"
+            ).model_dump(by_alias=True)
 
-        # filter by traveler type
-        traveler_type_lower = traveler_type.lower()
+        
+        # ---------- choose based on priority ----------
 
-        matching_hotels = [
-            h for h in hotels
-            if traveler_type_lower in h.get("traveler_type", [])
-        ]
-
-        if not matching_hotels:
-            matching_hotels = hotels
-
-
-        # sorting logic
         if priority == "price":
 
-            matching_hotels.sort(
-                key=lambda x: x.get(
-                    "price_per_night",
-                    float("inf")
-                )
+            best = min(
+                hotels,
+                key=lambda x: x["price"]
             )
 
         elif priority == "rating":
 
-            matching_hotels.sort(
-                key=lambda x: x.get("rating", 0),
-                reverse=True
+            best = max(
+                hotels,
+                key=lambda x: x["rating"]
             )
 
         else:  # balanced
 
-            matching_hotels.sort(
-                key=lambda x:
-                x.get("rating", 0)
-                / max(x.get("price_per_night", 1), 1),
-                reverse=True
+            # score = rating / price
+            best = max(
+                hotels,
+                key=lambda x: x["rating"] / (x["price"] + 1)
             )
 
-
-        top_pick = matching_hotels[0]
-
-        runner_up = (
-            matching_hotels[1]
-            if len(matching_hotels) > 1
-            else None
-        )
-
-
-        return {
-            "status": "success",
-            "destination": destination_clean,
-
-            "recommendation": {
-                "id": top_pick.get("id"),
-                "name": top_pick.get("name"),
-                "neighborhood": top_pick.get("neighborhood"),
-                "rating": top_pick.get("rating"),
-                "reviews": top_pick.get("reviews"),
-                "price_per_night": top_pick.get("price_per_night"),
-                "currency": top_pick.get("currency"),
-                "amenities": top_pick.get("amenities"),
-                "description": top_pick.get("description"),
-                "traveler_type": top_pick.get("traveler_type"),
-            },
-
-            "runner_up": (
-                {
-                    "id": runner_up.get("id"),
-                    "name": runner_up.get("name"),
-                    "rating": runner_up.get("rating"),
-                    "price_per_night": runner_up.get("price_per_night"),
-                }
-                if runner_up
-                else None
-            ),
-
-            "error": None,
-            "error_details": None,
-        }
+        return HotelResponse(
+            status="success",
+            destination=destination_clean,
+            recommended=best
+        ).model_dump(by_alias=True)
 
     except Exception as e:
+        logger.warning(f"Failed to recommended hotels")
 
-        return {
-            "status": "error",
-            "destination": destination_clean,
-            "recommendation": None,
-            "runner_up": None,
-            "error": "Failed to get recommendation",
-            "error_details": str(e),
-        }
-    
+        return HotelResponse(
+            status="error",
+            error=f"No hotels recommended for this destinaton : {destination_clean}",
+            error_details=str(e)
+        )      
