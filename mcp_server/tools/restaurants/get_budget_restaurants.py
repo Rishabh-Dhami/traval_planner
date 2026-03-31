@@ -3,6 +3,7 @@ from mcp_server.mcp_instance import mcp
 import logging
 
 from mcp_server.schemas.restaurants_schema import Restaurant, RestaurantResponse
+from mcp_server.utils import get_restaurants
 
 logger = logging.getLogger(__name__)
 

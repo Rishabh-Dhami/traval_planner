@@ -4,7 +4,7 @@ from mcp_server.schemas.flights_schema import Flight, FlightResponse
 from mcp_server.utils import get_flights
 import logging
 
-logger = logging.warning(__name__)
+logger = logging.getLogger(__name__)
 
 @mcp.tool(tags={"flight"})
 def search_flights(
@@ -63,15 +63,15 @@ def search_flights(
         if budget_max is not None:
             flights = [
                 f for f in flights
-                if f.get("price", float("inf")) <= budget_max
+                if f.price <= budget_max
             ]
 
         # filter by stops
         if preferred_stops == "direct":
-            flights = [f for f in flights if f.get("stops") == 0]
+            flights = [f for f in flights if f.stops == 0]
 
         elif preferred_stops == "one-stop":
-            flights = [f for f in flights if f.get("stops") == 1]
+            flights = [f for f in flights if f.stops == 1]
 
         if not flights:
             return FlightResponse(

@@ -56,7 +56,7 @@ def get_direct_flight(
         # filter direct flights safely
         direct_flights = [
             f for f in flights
-            if f.get("stops") == 0
+            if f.stops == 0
         ]
 
         if not direct_flights:
