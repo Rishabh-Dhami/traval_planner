@@ -1,5 +1,5 @@
 from backend.mcp_client.client import MCPClient
-from typing import Any, List
+from typing import List
 from langchain_core.tools import StructuredTool
 import logging
 
