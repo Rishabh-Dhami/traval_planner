@@ -103,14 +103,17 @@ by separate agents coordinated by a supervisor.
 """
 
 from langchain.agents import create_agent
+from backend.mcp_client.tool_registry import load_tools_by_tags
+from backend.app.prompts import FLIGHT_AGENT_PROMPT
 
 
 #create a flight agent
-def create_flights_agent(model):
+async def create_flights_agent(model):
     """Create and return flight agent"""
+    tools = await load_tools_by_tags("fligh")
     agent = create_agent(
         model,
-        tools=[get_cheapest_flight, get_direct_flight, search_flights, compare_flights],
+        tools=tools,
         system_prompt=FLIGHT_AGENT_PROMPT
     )
 

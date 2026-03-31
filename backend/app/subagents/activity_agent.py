@@ -108,43 +108,17 @@ by separate agents coordinated by a supervisor.
 
 
 from langchain.agents import create_agent
-from app.utils import get_activities
 from backend.app.prompts import ACTIVITY_AGENT_SYSTEM_PROMPT
+from backend.mcp_client.tool_registry import load_tools_by_tags
 
 
-
-@tool
-
-
-
-@tool
-
-
-
-@tool
-
-
-
-@tool
-
-
-@tool
-
-
-
-def create_activity_agent(model):
+async def create_activity_agent(model):
     "create and return activity agent"
+
+    tools = await load_tools_by_tags("activity")
     agent = create_agent(
         model=model,
-        tools=[
-            get_activities_by_category,
-            get_activities_by_duration,
-            get_activities_by_rating,
-            get_activity_recommendation,
-            get_activities_by_interest,
-            search_activities,
-            get_budget_activities
-        ],
+        tools=tools,
         system_prompt=ACTIVITY_AGENT_SYSTEM_PROMPT
     )
 

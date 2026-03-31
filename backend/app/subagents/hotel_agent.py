@@ -83,19 +83,14 @@ Notes:
 
 from langchain.agents import create_agent
 from backend.app.prompts import HOTEL_AGENT_PROMPT
+from backend.mcp_client.tool_registry import load_tools_by_tags
 
 def create_hotel_agent(model):
     """create and return hotel agent"""
+    tools = load_tools_by_tags("hotel")
     agent = create_agent(
         model=model,
-        tools=[
-            search_hotels,
-            get_budget_hotels,
-            get_hotel_recommendation,
-            get_hotels_by_amenities,
-            get_hotels_by_rating,
-            get_hotels_by_traveler_type
-        ],
+        tools=tools,
         system_prompt=HOTEL_AGENT_PROMPT
     )
 

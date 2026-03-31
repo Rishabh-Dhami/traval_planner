@@ -52,8 +52,7 @@ sys.path.insert(0, '../..')
 
 from langchain.agents import create_agent
 from app.prompts import RESTAURANT_AGENT_PROMPT
-
-
+from backend.mcp_client.tool_registry import load_tools_by_tags
 
 
 
@@ -61,17 +60,10 @@ def create_restaurant_agent(model):
     """
         create and return restaurant agent
     """
+    tools = load_tools_by_tags("restaurant")
     agent = create_agent(
         model=model,
-        tools=[
-            get_budget_restaurants,
-            search_restaurants,
-            get_restaurant_recommendation,
-            get_restaurants_by_rating,
-            get_restaurants_by_rating,
-            get_restaurants_by_tags,
-            get_restaurants_filtered
-        ],
+        tools=tools,
         system_prompt=RESTAURANT_AGENT_PROMPT
     )    
 
