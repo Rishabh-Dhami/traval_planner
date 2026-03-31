@@ -1,55 +1,46 @@
-from fastmcp import Client
 from typing import Dict, Any
 from langchain_mcp_adapters.client import MultiServerMCPClient
 import logging
 from dotenv import load_dotenv
 import os
-import asyncio
+import traceback
 
 load_dotenv()
 
 mcp_url = os.getenv("MCP_URL")
+mcp_token = os.getenv("MCP_API_KEY")
 
 logger = logging.getLogger(__name__)
 
-
 SERVERS = {
     "travel-tools": {
-        "transport": "streamable_http",  # if this fails, try "sse"
-        "url": mcp_url
+        "transport": "streamable-http",
+        "url": mcp_url,
+        "headers": {
+            "Authorization": f"Bearer {mcp_token}"
+        }
     },
-}
-
+    }
 
 class MCPClient:
-    def __init__(self, servers: dict):
-        self.client = Client(servers)
+    
+    def __init__(self):
+        self.client = MultiServerMCPClient(SERVERS)
 
     async def list_tools(self):
         try:
-            async with self.client:
-                tools = await self.client.list_tools()
-                return tools
+            tools = await self.client.get_tools()
+            return tools
         except Exception as e:
+            traceback.print_exc()  
             logger.warning(f"Error listing tools: {e}")
             return {"error": str(e)}
     
     async def call_tool(self, tool_name: str, payload: Dict[str, Any]):
         try:
-            response = await self.client.call_tool(tool_name, payload)
-            return response
+            result = await self.client.call_tool(tool_name, payload)
+            return result
         except Exception as e:
             logger.warning(f"Error calling tool {tool_name}: {e}")
             return {"error": str(e)}
-
-# ✅ Run properly
-async def main():
-    print("URL:", mcp_url)
-    client = MCPClient(servers=SERVERS)
-    
-    tools = await client.list_tools()
-    print(tools)
-
-asyncio.run(main())
-
 
