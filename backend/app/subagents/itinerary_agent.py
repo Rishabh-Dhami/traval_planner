@@ -9,10 +9,9 @@
     - generate_trip_summary 
 """
 
-from langchain.tools import tool
 from langchain.agents import create_agent
-from typing import Dict, Any, List, Literal
 from backend.mcp_client.tool_registry import load_tools_by_tags
+from backend.app.prompts import ITINERARY_AGENT_PROMPT
 
 
 
@@ -24,7 +23,7 @@ def create_itinerary_agent(model):
     agent = create_agent(
         model=model,
         tools=tools,
-        system_prompt=RESTAURANT_AGENT_PROMPT
+        system_prompt=ITINERARY_AGENT_PROMPT
     )    
 
     return agent
