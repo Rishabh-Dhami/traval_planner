@@ -3,7 +3,7 @@ from langchain.tools import tool
 from mcp_server.mcp_instance import mcp
 
 
-@mcp.tool()
+@mcp.tool(tags={"itinerary"})
 def optimize_route(
     locations: List[str]
 ) -> Dict[str, Any]:
