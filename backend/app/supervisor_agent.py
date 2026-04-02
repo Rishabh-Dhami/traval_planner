@@ -10,8 +10,11 @@
 from backend.app.core.wrapper_agents import wrap_agent_as_tool
 from backend.app.prompts import SUPERVISOR_PROMPT
 from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 
-async def create_supervisor_agent(agents: dict):
+async def create_supervisor_agent(
+        agents: dict,
+    ):
     "create and return supervisor agent"
 
     model = agents["model"]
@@ -28,7 +31,8 @@ async def create_supervisor_agent(agents: dict):
     supervisor = create_agent(
         model=model,
         tools=tools,
-        system_prompt=SUPERVISOR_PROMPT
+        system_prompt=SUPERVISOR_PROMPT,
+        checkpointer=InMemorySaver()
     )
 
     return supervisor
