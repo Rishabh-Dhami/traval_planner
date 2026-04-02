@@ -120,7 +120,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 async def create_activity_agent(model):
-    "create and return activity agent"
+    """
+    Create and return a activity agent.
+
+    Args:
+        model: The LLM model instance to bind to the agent.
+        retries: Number of attempts to load tools before failing.
+
+    Returns:
+        A configured agent instance, or None if initialization failed.
+
+    """
 
     try:
         tools = await load_tools_by_tags("activity")

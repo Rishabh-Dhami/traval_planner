@@ -89,7 +89,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 async def create_hotel_agent(model):
-    """create and return hotel agent"""
+    """
+    Create and return a hotel agent.
+
+    Args:
+        model: The LLM model instance to bind to the agent.
+        retries: Number of attempts to load tools before failing.
+
+    Returns:
+        A configured agent instance, or None if initialization failed.
+
+    Raises:
+        Nothing — failures are logged and None is returned so callers can
+        decide whether to fall back or surface the error to the user.
+    """
     try:
         tools = await load_tools_by_tags("hotel")
         agent = create_agent(
