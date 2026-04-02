@@ -48,23 +48,31 @@ This file defines:
 """
 
 import sys
-sys.path.insert(0, '../..')
+
+sys.path.insert(0, "../..")
+import logging
 
 from langchain.agents import create_agent
-from app.prompts import RESTAURANT_AGENT_PROMPT
+from backend.app.prompts import RESTAURANT_AGENT_PROMPT
 from backend.mcp_client.tool_registry import load_tools_by_tags
 
+logger = logging.getLogger(__name__)
 
 
-def create_restaurant_agent(model):
+async def create_restaurant_agent(model):
     """
-        create and return restaurant agent
+    create and return restaurant agent
     """
-    tools = load_tools_by_tags("restaurant")
-    agent = create_agent(
-        model=model,
-        tools=tools,
-        system_prompt=RESTAURANT_AGENT_PROMPT
-    )    
+    try:
+        tools = await load_tools_by_tags("restaurant")
 
-    return agent
+        agent = create_agent(
+            model=model, tools=tools, system_prompt=RESTAURANT_AGENT_PROMPT
+        )
+
+        logger.info("Restaurant agent initialized successfully")
+        return agent
+
+    except Exception as e:
+        logger.error(f"Restaurant agent failed: {e}")
+        return None

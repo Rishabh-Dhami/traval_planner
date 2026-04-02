@@ -12,18 +12,26 @@
 from langchain.agents import create_agent
 from backend.mcp_client.tool_registry import load_tools_by_tags
 from backend.app.prompts import ITINERARY_AGENT_PROMPT
+import logging
 
 
-
-def create_itinerary_agent(model):
+logger = logging.getLogger(__name__)
+async def create_itinerary_agent(model):
     """
-        create and return restaurant agent
+        create and return itinerary agent
     """
-    tools = load_tools_by_tags("itinerary")
-    agent = create_agent(
-        model=model,
-        tools=tools,
-        system_prompt=ITINERARY_AGENT_PROMPT
-    )    
+    try:
+        tools = await load_tools_by_tags("itinerary")
+        agent = create_agent(
+            model=model,
+            tools=tools,
+            system_prompt=ITINERARY_AGENT_PROMPT
+        )    
 
-    return agent
+        logger.info("Itinerary agent initialized successfully")
+
+        return agent
+
+    except Exception as e:
+        logger.error(f"Itinerary agent failed: {e}")
+        return None

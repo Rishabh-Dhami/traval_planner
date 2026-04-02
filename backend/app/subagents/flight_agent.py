@@ -105,16 +105,26 @@ by separate agents coordinated by a supervisor.
 from langchain.agents import create_agent
 from backend.mcp_client.tool_registry import load_tools_by_tags
 from backend.app.prompts import FLIGHT_AGENT_PROMPT
+import logging
 
+logger = logging.getLogger(__name__)
 
 #create a flight agent
 async def create_flights_agent(model):
     """Create and return flight agent"""
-    tools = await load_tools_by_tags("fligh")
-    agent = create_agent(
-        model,
-        tools=tools,
-        system_prompt=FLIGHT_AGENT_PROMPT
-    )
+    try:
+        tools = await load_tools_by_tags("flight")
+        agent = create_agent(
+            model,
+            tools=tools,
+            system_prompt=FLIGHT_AGENT_PROMPT
+        )
 
-    return agent    
+        logger.info("Flight agent intiallized successfully")
+
+        return agent
+    except Exception as e:
+        logger.warning(f"Flight agent failed: {str(e)}")
+        return None
+
+    

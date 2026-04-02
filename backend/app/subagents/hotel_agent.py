@@ -84,14 +84,23 @@ Notes:
 from langchain.agents import create_agent
 from backend.app.prompts import HOTEL_AGENT_PROMPT
 from backend.mcp_client.tool_registry import load_tools_by_tags
+import logging
 
-def create_hotel_agent(model):
+logger = logging.getLogger(__name__)
+
+async def create_hotel_agent(model):
     """create and return hotel agent"""
-    tools = load_tools_by_tags("hotel")
-    agent = create_agent(
-        model=model,
-        tools=tools,
-        system_prompt=HOTEL_AGENT_PROMPT
-    )
+    try:
+        tools = await load_tools_by_tags("hotel")
+        agent = create_agent(
+            model=model,
+            tools=tools,
+            system_prompt=HOTEL_AGENT_PROMPT
+        )
 
-    return agent
+        logger.info("Hotel agent intiallized successfully")
+
+        return agent
+    except Exception as e:
+        logger.warning(f"Hotel agent failed: {str(e)}")
+        return None

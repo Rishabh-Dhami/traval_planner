@@ -106,20 +106,33 @@ where flights, hotels, and activities, resturents are handled
 by separate agents coordinated by a supervisor.
 """
 
+import sys
+from pathlib import Path
+
+# Add project root to path so absolute imports work
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from langchain.agents import create_agent
-from backend.app.prompts import ACTIVITY_AGENT_SYSTEM_PROMPT
+from backend.app.prompts import ACTIVITY_AGENT_PROMPT
 from backend.mcp_client.tool_registry import load_tools_by_tags
+from langchain_google_genai import ChatGoogleGenerativeAI
+import logging
 
-
+logger = logging.getLogger(__name__)
 async def create_activity_agent(model):
     "create and return activity agent"
 
-    tools = await load_tools_by_tags("activity")
-    agent = create_agent(
-        model=model,
-        tools=tools,
-        system_prompt=ACTIVITY_AGENT_SYSTEM_PROMPT
-    )
+    try:
+        tools = await load_tools_by_tags("activity")
+        agent = create_agent(
+            model,
+            tools=tools,
+            system_prompt=ACTIVITY_AGENT_PROMPT
+        )
 
-    return agent
+        logger.info("Activity agent intiallized successfully")
+
+        return agent
+    except Exception as e:
+        logger.warning(f"Activity agent failed: {str(e)}")
+        return None
