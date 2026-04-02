@@ -25,15 +25,17 @@ async def load_tools_by_tags(tag: str) -> List[StructuredTool]:
             )
 
             if tag in tags:
-
-                async def tool_func(input_data: dict, tool_name=tool.name):
-                    return await client.call_tool(tool_name, input_data)
+                # Create a factory function to properly capture tool_name in closure
+                def create_tool_func(tool_name):
+                    async def tool_func(input_data: dict):
+                        return await client.call_tool(tool_name, input_data)
+                    return tool_func
 
                 tools.append(
                     StructuredTool.from_function(
                         name=tool.name,
                         description=tool.description or "No description",
-                        coroutine=tool_func  
+                        coroutine=create_tool_func(tool.name)
                     )
                 )
 

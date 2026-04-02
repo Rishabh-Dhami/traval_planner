@@ -26,10 +26,12 @@ class MCPClient:
     
     def __init__(self):
         self.client = MultiServerMCPClient(SERVERS)
+        self._tools: dict = {}
 
     async def list_tools(self):
         try:
             tools = await self.client.get_tools()
+            self._tools = {tool.name: tool for tool in tools}
             return tools
         except Exception as e:
             traceback.print_exc()  
@@ -38,7 +40,15 @@ class MCPClient:
     
     async def call_tool(self, tool_name: str, payload: Dict[str, Any]):
         try:
-            result = await self.client.call_tool(tool_name, payload)
+            if not self._tools:
+                await self.list_tools()
+
+            tool = self._tools.get(tool_name)
+            if tool is None:
+                return {"error": f"Tool '{tool_name}' not found"}
+
+            # Invoke the LangChain tool object directly
+            result = await tool.ainvoke(payload)
             return result
         except Exception as e:
             logger.warning(f"Error calling tool {tool_name}: {e}")
